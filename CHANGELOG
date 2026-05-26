@@ -1,0 +1,13 @@
+# Changelog
+
+## v1.0.0
+
+Initial JMX release.
+
+- Renamed and reorganized the client as JMX.
+- Reworked the main experience with an Apple-inspired Liquid Glass design direction.
+- Added home discovery, search, recommendations, comic detail, comments, favorites, history, reading, and download flows.
+- Added JM account login, profile, check-in, and synchronized account data.
+- Added local cache trimming and APK size optimizations.
+- Embedded the required AndroidLiquidGlass Backdrop module under `third_party/AndroidLiquidGlass/backdrop` for reproducible builds.
+- Added disclaimer and open-source credits pages.

@@ -1,0 +1,570 @@
+package dev.jmx.client.ui.screens
+
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import dev.jmx.client.R
+import dev.jmx.client.ui.components.CommonScaffold
+import dev.jmx.client.ui.glass.GlassPanel
+import dev.jmx.client.ui.glass.LocalJmxGlassPalette
+import dev.jmx.client.ui.razor.AppleChevron
+import dev.jmx.client.ui.razor.RazorText
+
+private const val PROJECT_URL_PLACEHOLDER = "GitHub link pending"
+
+@Stable
+private data class CreditItem(
+    val name: String,
+    val source: String,
+    val url: String,
+    val note: String
+)
+
+private val openSourceCredits = listOf(
+    CreditItem(
+        name = "AndroidLiquidGlass",
+        source = "Kyant0/AndroidLiquidGlass",
+        url = "https://github.com/Kyant0/AndroidLiquidGlass",
+        note = "Liquid Glass visual system and interaction reference."
+    ),
+    CreditItem(
+        name = "jm-mobile",
+        source = "Dedicatus546/jm-mobile",
+        url = "https://github.com/Dedicatus546/jm-mobile",
+        note = "Original third-party JM client architecture and feature foundation."
+    ),
+    CreditItem(
+        name = "jmcomic-api-java",
+        source = "JMComic API reference",
+        url = "https://jmcomic-api-java.readthedocs.io/zh-cn/latest/",
+        note = "API behavior, model and feature reference documentation."
+    ),
+    CreditItem(
+        name = "AndroidX Compose",
+        source = "Google AndroidX",
+        url = "https://developer.android.com/compose",
+        note = "Declarative UI runtime, navigation, paging and graphics foundation."
+    ),
+    CreditItem(
+        name = "Coil / OkHttp / Retrofit / Koin / Room",
+        source = "Open-source Android ecosystem",
+        url = "https://github.com/coil-kt/coil",
+        note = "Image loading, networking, dependency injection and local persistence."
+    )
+)
+
+@Composable
+private fun rememberMotionBrush(
+    label: String,
+    colors: List<Color>,
+    durationMillis: Int
+): Brush {
+    val transition = rememberInfiniteTransition(label = label)
+    val shift by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = durationMillis, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "${label}Shift"
+    )
+    return Brush.linearGradient(
+        colors = colors,
+        start = Offset(x = 920f * shift, y = 0f),
+        end = Offset(x = 920f * (1f - shift), y = 260f)
+    )
+}
+
+@Composable
+private fun SectionLabel(text: String) {
+    val palette = LocalJmxGlassPalette.current
+    RazorText(
+        text = text,
+        modifier = Modifier.padding(start = 6.dp, bottom = 8.dp),
+        style = TextStyle(
+            color = palette.tertiaryText,
+            fontSize = 12.sp,
+            lineHeight = 15.sp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 0.8.sp
+        )
+    )
+}
+
+@Composable
+private fun AboutGlassCard(
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    GlassPanel(
+        modifier = modifier.fillMaxWidth(),
+        cornerRadius = 34.dp,
+        useContentSurface = true
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(22.dp),
+            content = content
+        )
+    }
+}
+
+@Composable
+private fun AboutActionRow(
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit
+) {
+    val palette = LocalJmxGlassPalette.current
+    val interactionSource = remember { MutableInteractionSource() }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(24.dp))
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick
+            )
+            .background(palette.contentSurface.copy(alpha = 0.46f))
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            RazorText(
+                text = title,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                style = TextStyle(
+                    color = palette.primaryText,
+                    fontSize = 16.sp,
+                    lineHeight = 20.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+            )
+            Spacer(modifier = Modifier.height(3.dp))
+            RazorText(
+                text = subtitle,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                style = TextStyle(
+                    color = palette.secondaryText,
+                    fontSize = 13.sp,
+                    lineHeight = 17.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            )
+        }
+        AppleChevron()
+    }
+}
+
+@Composable
+private fun AppIntroCard() {
+    val palette = LocalJmxGlassPalette.current
+    val logoBrush = rememberMotionBrush(
+        label = "jmxLogoTextGradient",
+        colors = listOf(
+            Color(0xFF111111),
+            Color(0xFF0A84FF),
+            Color(0xFFFF7AB6),
+            Color(0xFF111111)
+        ),
+        durationMillis = 4200
+    )
+    val transition = rememberInfiniteTransition(label = "jmxLogoFloat")
+    val floatOffset by transition.animateFloat(
+        initialValue = -4f,
+        targetValue = 4f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 2600, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "jmxLogoFloatOffset"
+    )
+
+    AboutGlassCard {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Image(
+                painter = painterResource(R.drawable.jmx_logo),
+                contentDescription = "JMX",
+                modifier = Modifier
+                    .size(118.dp)
+                    .graphicsLayer {
+                        translationY = floatOffset
+                    }
+                    .clip(CircleShape)
+                    .border(
+                        width = 1.4.dp,
+                        brush = Brush.linearGradient(
+                            listOf(
+                                Color.White.copy(alpha = 0.92f),
+                                palette.accent.copy(alpha = 0.42f),
+                                Color.White.copy(alpha = 0.58f)
+                            )
+                        ),
+                        shape = CircleShape
+                    ),
+                contentScale = ContentScale.Crop
+            )
+            Spacer(modifier = Modifier.height(18.dp))
+            RazorText(
+                text = "JMX",
+                style = TextStyle(
+                    brush = logoBrush,
+                    fontSize = 42.sp,
+                    lineHeight = 46.sp,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = (-1.4).sp
+                )
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+            RazorText(
+                text = "Liquid Glass JM Client",
+                style = TextStyle(
+                    color = palette.secondaryText,
+                    fontSize = 15.sp,
+                    lineHeight = 19.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 0.2.sp
+                )
+            )
+            Spacer(modifier = Modifier.height(18.dp))
+            RazorText(
+                text = "JMX 是面向 JMComic / 禁漫天堂的第三方 Android 客户端，专注于更轻、更直接的阅读体验，并以 Apple 风格排版和 Liquid Glass 视觉语言重新组织浏览、搜索、收藏与阅读流程。",
+                style = TextStyle(
+                    color = palette.secondaryText,
+                    fontSize = 14.sp,
+                    lineHeight = 22.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            )
+        }
+    }
+}
+
+@Composable
+private fun DeveloperCard() {
+    val palette = LocalJmxGlassPalette.current
+    val nameBrush = rememberMotionBrush(
+        label = "developerNameGradient",
+        colors = listOf(
+            Color(0xFF5EA1FF),
+            Color(0xFF57D9C8),
+            Color(0xFFFFB45C),
+            Color(0xFFFF7EB3)
+        ),
+        durationMillis = 3600
+    )
+    val transition = rememberInfiniteTransition(label = "developerAvatarMotion")
+    val scale by transition.animateFloat(
+        initialValue = 0.985f,
+        targetValue = 1.015f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 2400, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "developerAvatarScale"
+    )
+
+    AboutGlassCard {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Image(
+                painter = painterResource(R.drawable.developer_avatar),
+                contentDescription = "ASakur",
+                modifier = Modifier
+                    .size(82.dp)
+                    .graphicsLayer {
+                        scaleX = scale
+                        scaleY = scale
+                    }
+                    .clip(CircleShape)
+                    .border(
+                        width = 1.6.dp,
+                        brush = Brush.linearGradient(
+                            listOf(
+                                Color.White.copy(alpha = 0.95f),
+                                palette.accent.copy(alpha = 0.54f),
+                                Color(0xFFFFB7D5).copy(alpha = 0.78f)
+                            )
+                        ),
+                        shape = CircleShape
+                    ),
+                contentScale = ContentScale.Crop
+            )
+            Column(modifier = Modifier.weight(1f)) {
+                RazorText(
+                    text = "ASakur",
+                    style = TextStyle(
+                        brush = nameBrush,
+                        fontSize = 31.sp,
+                        lineHeight = 35.sp,
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = (-0.7).sp
+                    )
+                )
+                Spacer(modifier = Modifier.height(5.dp))
+                RazorText(
+                    text = "Developer / Interface Direction",
+                    style = TextStyle(
+                        color = palette.secondaryText,
+                        fontSize = 13.sp,
+                        lineHeight = 17.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                RazorText(
+                    text = "负责 JMX 的客户端体验整合、Apple 风格化界面改造与 Liquid Glass 交互调校。",
+                    style = TextStyle(
+                        color = palette.secondaryText,
+                        fontSize = 13.sp,
+                        lineHeight = 20.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun AboutScreen() {
+    val mainNavController = LocalMainNavController.current
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 18.dp),
+        contentAlignment = Alignment.TopCenter
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(top = 20.dp, bottom = 132.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp)
+        ) {
+            AppIntroCard()
+
+            Column {
+                SectionLabel("LEGAL")
+                AboutActionRow(
+                    title = "免责声明",
+                    subtitle = "查看完整使用声明与责任边界",
+                    onClick = { mainNavController.navigate("aboutDisclaimer") }
+                )
+            }
+
+            Column {
+                SectionLabel("DEVELOPER")
+                DeveloperCard()
+            }
+
+            Column {
+                SectionLabel("PROJECT")
+                AboutGlassCard {
+                    RazorText(
+                        text = "项目地址",
+                        style = TextStyle(
+                            color = LocalJmxGlassPalette.current.primaryText,
+                            fontSize = 16.sp,
+                            lineHeight = 20.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    RazorText(
+                        text = PROJECT_URL_PLACEHOLDER,
+                        style = TextStyle(
+                            color = LocalJmxGlassPalette.current.secondaryText,
+                            fontSize = 13.sp,
+                            lineHeight = 18.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    )
+                }
+            }
+
+            Column {
+                SectionLabel("CREDITS")
+                AboutActionRow(
+                    title = "项目引用",
+                    subtitle = "开源项目、API 文档与基础组件",
+                    onClick = { mainNavController.navigate("aboutCredits") }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun AboutDisclaimerScreen() {
+    val palette = LocalJmxGlassPalette.current
+    CommonScaffold(title = "免责声明") {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 18.dp, vertical = 18.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            AboutGlassCard {
+                RazorText(
+                    text = "JMX 是面向 JMComic / 禁漫天堂的第三方客户端，仅用于技术研究、界面实验与个人学习用途；本项目不隶属于、代表或受 JMComic / 禁漫天堂官方授权。",
+                    style = TextStyle(
+                        color = palette.primaryText,
+                        fontSize = 15.sp,
+                        lineHeight = 24.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                )
+                Spacer(modifier = Modifier.height(14.dp))
+                RazorText(
+                    text = "应用中展示的漫画、图片、文本与用户数据均来源于用户访问的第三方服务。JMX 不存储、不分发、不拥有相关内容版权，也不对第三方服务的可用性、准确性、合法性或内容安全作任何保证。",
+                    style = TextStyle(
+                        color = palette.secondaryText,
+                        fontSize = 14.sp,
+                        lineHeight = 23.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                RazorText(
+                    text = "用户应自行确认所在地法律法规及平台规则，并对账号登录、内容访问、下载缓存、数据同步等行为承担全部责任。若相关权利方认为本项目存在不当引用或侵权风险，请通过项目地址联系维护者处理。",
+                    style = TextStyle(
+                        color = palette.secondaryText,
+                        fontSize = 14.sp,
+                        lineHeight = 23.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                RazorText(
+                    text = "继续使用 JMX 即表示你理解并接受上述说明。",
+                    style = TextStyle(
+                        color = palette.primaryText,
+                        fontSize = 14.sp,
+                        lineHeight = 22.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun AboutCreditsScreen() {
+    val palette = LocalJmxGlassPalette.current
+    val uriHandler = LocalUriHandler.current
+    CommonScaffold(title = "项目引用") {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 18.dp, vertical = 18.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            openSourceCredits.forEach { item ->
+                AboutGlassCard {
+                    RazorText(
+                        text = item.name,
+                        style = TextStyle(
+                            color = palette.primaryText,
+                            fontSize = 18.sp,
+                            lineHeight = 22.sp,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = (-0.25).sp
+                        )
+                    )
+                    Spacer(modifier = Modifier.height(5.dp))
+                    Row(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(999.dp))
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null,
+                                onClick = { uriHandler.openUri(item.url) }
+                            )
+                            .background(palette.accent.copy(alpha = 0.10f))
+                            .padding(horizontal = 10.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RazorText(
+                            text = item.source,
+                            style = TextStyle(
+                                color = palette.accent,
+                                fontSize = 13.sp,
+                                lineHeight = 17.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
+                    RazorText(
+                        text = item.note,
+                        style = TextStyle(
+                            color = palette.secondaryText,
+                            fontSize = 14.sp,
+                            lineHeight = 22.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    )
+                }
+            }
+        }
+    }
+}

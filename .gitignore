@@ -1,0 +1,40 @@
+# Gradle / Android
+.gradle/
+build/
+**/build/
+captures/
+.externalNativeBuild/
+.cxx/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Local machine configuration
+local.properties
+release-key
+*.jks
+*.keystore
+
+# Kotlin / Java
+.kotlin/
+*.class
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs and temporary diagnostics
+*.log
+*.tmp
+*.pid
+*logcat*
+jmx_perf_*
+
+# Local screenshots / recordings generated during manual QA
+sakura_*
+drag_*
+tap_*
+window.xml
+video_*
