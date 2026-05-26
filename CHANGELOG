@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.0.1
+
+Release hotfix.
+
+- Disabled release R8 minification and resource shrinking to avoid runtime crashes caused by over-aggressive stripping.
+- Kept release APK signing enabled so the published package remains installable.
+
 ## v1.0.0
 
 Initial JMX release.
